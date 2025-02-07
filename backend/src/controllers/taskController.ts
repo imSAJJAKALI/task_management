@@ -69,30 +69,33 @@ export const getTasks = async (req: CustomRequest, res: Response):Promise<void>=
 
 
 export const updateTask = async (req: CustomRequest, res: Response) => {
-
-  const { error } = taskSchema.validate(req.body);
+  const { error } = taskSchema.validate(req.body, { allowUnknown: true }); // Validate body, allowing partial fields
   if (error) {
     res.status(400).json({ message: error.details[0].message });
-    return 
+    return;
   }
+
   const { id } = req.params;
-  const { title, description, completed } = req.body;
 
   try {
+    // Perform the update and return the updated task
     const task = await Task.findByIdAndUpdate(
       id,
-      { title, description, completed },
-      { new: true }
+      { $set: req.body }, // Only update fields in the request body
+      { new: true } // Return the updated task
     );
-    if (!task){
+
+    if (!task) {
       res.status(404).json({ message: "Task not found." });
-      return
+      return;
     }
+
     res.json(task);
-  } catch (error:any) {
+  } catch (error: any) {
     res.status(400).json({ message: error.message });
   }
 };
+
 
 export const deleteTask = async (req: CustomRequest, res: Response) => {
   const { id } = req.params;
